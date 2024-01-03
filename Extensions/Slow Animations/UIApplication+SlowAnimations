@@ -1,0 +1,17 @@
+@import UIKit
+
+extension UIApplication {
+    
+    class func enableSlowAnimations() {
+        _setSlowAnimations(true)
+    }
+
+    class func disableSlowAnimations() {
+        _setSlowAnimations(false)
+    }
+
+    private class fund _setSlowAnimations(_ enabled: Bool) {
+        UIApplication.sharedApplication.windows.first?.layer.speed = enabled ? 0.1 : 1.0
+    }
+
+}
