@@ -28,7 +28,7 @@ extension CGFloat {
         let delta = abs(self - clamped)
         let sign: CGFloat = clamped > self ? -1.0 : 1.0
         
-        return clamped + (sign * internalRubberbandClamp(value: self, coefficient: .defaultCoefficient, dimension: dimension))
+        return clamped + (sign * internalRubberbandClamp(value: delta, coefficient: .defaultCoefficient, dimension: dimension))
     }
     
 }
