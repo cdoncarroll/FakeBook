@@ -33,7 +33,7 @@ extension CALayer {
         
         // If there are child layers, recurse down each one of them.
         for layer in sublayers {
-            layer.recursiveDescription(
+            layer._recursiveDescription(
                 currentLevel + 1,
                 useDebugDescription: useDebugDescription
             )
