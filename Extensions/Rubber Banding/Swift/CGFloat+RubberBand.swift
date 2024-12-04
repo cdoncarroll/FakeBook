@@ -8,14 +8,14 @@ import CoreGraphics
 
 extension CGFloat {
     
-    fileprivate static var defaultCoefficient: CGFloat = 0.55
+    private static var _defaultCoefficient: CGFloat = 0.55
     
     public func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
         let clamped = self < range.lowerBound ? range.lowerBound : self
         return clamped > range.upperBound ? range.upperBound : clamped
     }
     
-    fileprivate func internalRubberbandClamp(value: CGFloat, coefficient: CGFloat, dimension: CGFloat) -> CGFloat {
+    private func _internalRubberbandClamp(value: CGFloat, coefficient: CGFloat, dimension: CGFloat) -> CGFloat {
         return (1.0 - (1.0 / ((value * coefficient / dimension) + 1.0))) * dimension
     }
     
@@ -28,7 +28,7 @@ extension CGFloat {
         let delta = abs(self - clamped)
         let sign: CGFloat = clamped > self ? -1.0 : 1.0
         
-        return clamped + (sign * internalRubberbandClamp(value: delta, coefficient: .defaultCoefficient, dimension: dimension))
+        return clamped + (sign * _internalRubberbandClamp(value: delta, coefficient: ._defaultCoefficient, dimension: dimension))
     }
     
 }
