@@ -9,7 +9,7 @@ import UIKit
 
 final class TouchView: UIView {
     
-    fileprivate lazy var blurView: UIVisualEffectView = {
+    private lazy var _blurView: UIVisualEffectView = {
         let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialLight)
         return UIVisualEffectView(effect: blurEffect)
     }()
@@ -29,7 +29,7 @@ final class TouchView: UIView {
         layer.borderColor = UIColor.white.cgColor
         layer.borderWidth = 2.0
         
-        addSubview(blurView)
+        addSubview(_blurView)
     }
     
     @available(iOS, unavailable)
@@ -39,7 +39,7 @@ final class TouchView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        blurView.frame = bounds
+        _blurView.frame = bounds
     }
     
 }
@@ -47,9 +47,17 @@ final class TouchView: UIView {
 
 class TouchesVisibleWindow: UIWindow {
     
-    fileprivate var touchViews: [UITouch : TouchView] = [:]
+    var touchesVisible = false {
+        didSet {
+            if touchesVisible == false {
+                _cleanUpAllTouches()
+            }
+        }
+    }
     
-    fileprivate func newTouchView() -> TouchView {
+    private var _touchViews: [UITouch : TouchView] = [:]
+    
+    private func _newTouchView() -> TouchView {
         let touchSize = 44.0
         return TouchView(frame: CGRect(
             origin: .zero,
@@ -60,31 +68,39 @@ class TouchesVisibleWindow: UIWindow {
         ))
     }
     
-    fileprivate func cleanupTouch(_ touch: UITouch) {
-        guard let touchView = touchViews[touch] else {
+    private func _cleanupTouch(_ touch: UITouch) {
+        guard let touchView = _touchViews[touch] else {
             return
         }
         
         touchView.removeFromSuperview()
-        touchViews.removeValue(forKey: touch)
+        _touchViews.removeValue(forKey: touch)
     }
     
-    fileprivate func cleanUpAllTouches() {
-        for (_, touchView) in touchViews {
+    private func _cleanUpAllTouches() {
+        for (_, touchView) in _touchViews {
             touchView.removeFromSuperview()
         }
         
-        touchViews.removeAll()
+        _touchViews.removeAll()
     }
     
     override func sendEvent(_ event: UIEvent) {
+        /// If touches aren't supposed to be visible, then let's just forward the event along and bail.
+        guard touchesVisible else {
+            super.sendEvent(event)
+            return
+        }
+        
         let touches = event.allTouches
         
+        /// If there aren't any more touches active on the display, then let's clean up any touch views
+        /// that are still hanging around.
         guard
             let touches = touches,
             touches.count > 0
         else {
-            cleanUpAllTouches()
+            _cleanUpAllTouches()
             super.sendEvent(event)
             return
         }
@@ -93,19 +109,19 @@ class TouchesVisibleWindow: UIWindow {
             let touchLocation = touch.location(in: self)
             switch touch.phase {
             case .began:
-                let touchView = newTouchView()
+                let touchView = _newTouchView()
                 touchView.center = touchLocation
                 addSubview(touchView)
-                touchViews[touch] = touchView
+                _touchViews[touch] = touchView
                 
             case .moved:
-                guard let touchView = touchViews[touch] else {
+                guard let touchView = _touchViews[touch] else {
                     return
                 }
                 touchView.center = touchLocation
                 
             case .ended, .cancelled:
-                cleanupTouch(touch)
+                _cleanupTouch(touch)
             default:
                 print("Nothing to do")
             }
